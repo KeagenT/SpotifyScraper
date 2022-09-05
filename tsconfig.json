@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "baseUrl": "src/",
-    "target": "es2016",                                 
+    "module": "esnext",
+    "baseUrl": "src/*",
+    "target": "es2017",                                 
     "esModuleInterop": true,                             
     "forceConsistentCasingInFileNames": true,           
     "strict": false,                                      
