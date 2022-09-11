@@ -33,4 +33,16 @@ export class Song {
     equals (otherSong: Song): boolean {
         return this.title === otherSong.title && this.artists === otherSong.artists;
     }
+
+    toJSON (): object {
+        return {
+            title: this.title,
+            artists: this.artists,
+            album: this.album
+        };
+    }
+
+    toString (): string {
+        return `${this.title}\n${this.artists.join(',')}\n${this.album !== undefined ? this.album : 'N/A'}`;
+    }
 }
