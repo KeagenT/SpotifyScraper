@@ -15,45 +15,47 @@ const getSpotifyPlaylistPageSongArray = async (url = scrapingURL) => {
     let initialSelectorItems = 0;
     let loadedSelectorItems = 0;
     const scrapedSongs = [];
-    let loadedSongsHTML;
     let count = 0;
     do {
         await page.waitForSelector(TRACKLIST_ROW_SELECTOR);
         await page.waitForNetworkIdle();
         initialSelectorItems = await getCount(page, TRACKLIST_ROW_SELECTOR);
-        loadedSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
-        //const parsedSongs = parseAllLoadedSongRowHTML(await loadedSongsHTML);
-        //pushOnlyNewSongs(scrapedSongs, parsedSongs);
+        const pendingSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
+        const parsedSongs = parseAllLoadedSongRowHTML(pendingSongsHTML);
+        await pushOnlyNewSongs(scrapedSongs, parsedSongs);
         await scrollDownToLast(page, TRACKLIST_ROW_SELECTOR);
         await page.waitForNetworkIdle();
         loadedSelectorItems = await getCount(page, TRACKLIST_ROW_SELECTOR);
         count += 1;
     } while (loadedSelectorItems > initialSelectorItems && count < 6);
     await browser.close();
-    return loadedSongsHTML;
+    return scrapedSongs;
 };
 async function getAllLoadedSongRowHTML(page, selector = TRACKLIST_ROW_SELECTOR) {
     return await page.$$(selector);
 }
-function songInScraped(scrapedSongs, song) {
+async function songInScraped(scrapedSongs, pendingSong) {
     let songFound = false;
-    scrapedSongs.forEach((scrapedSong) => {
-        if (scrapedSong.equals(song)) {
+    for (const scrapedSong of scrapedSongs) {
+        await scrapedSong.load();
+        await pendingSong.load();
+        if (scrapedSong.equals(pendingSong)) {
             songFound = true;
             return songFound;
         }
-    });
+    }
     return songFound;
 }
 function parseAllLoadedSongRowHTML(songsRowHTML) {
     return songsRowHTML.map((songRowHTML) => new Song(songRowHTML));
 }
-function pushOnlyNewSongs(OldSongs, CurrentlyloadedSongs) {
-    CurrentlyloadedSongs.forEach((song) => {
-        if (!songInScraped(OldSongs, song)) {
-            OldSongs.push(song);
+async function pushOnlyNewSongs(scrapedSongs, pendingSongs) {
+    for (const pendingSong of pendingSongs) {
+        const songFound = await songInScraped(scrapedSongs, pendingSong);
+        if (!songFound) {
+            scrapedSongs.push(pendingSong);
         }
-    });
+    }
 }
 async function getCount(page, selector) {
     return await page.$$eval(selector, a => a.length);
@@ -65,3 +67,4 @@ async function scrollDownToLast(page, selector) {
 }
 const scrapedSongs = await getSpotifyPlaylistPageSongArray();
 console.log(scrapedSongs);
+console.log(scrapedSongs.length);

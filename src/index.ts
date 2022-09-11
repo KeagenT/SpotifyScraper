@@ -1,6 +1,5 @@
 import puppeteer, { ElementHandle, Page } from 'puppeteer';
 import { Song } from './class/song.js';
-import {} from 'utils/arrays.js';
 
 const scrapingURL = 'https://open.spotify.com/playlist/7wXtRYW8fjEqV4gGdhnuQE?si=cfbe46dafa3442e3&nd=1';
 const TRACKLIST_ROW_SELECTOR = 'div[data-testid="tracklist-row"]';
@@ -78,3 +77,4 @@ async function scrollDownToLast (page: Page, selector: string): Promise<any> {
 
 const scrapedSongs = await getSpotifyPlaylistPageSongArray();
 console.log(scrapedSongs);
+console.log(scrapedSongs.length);

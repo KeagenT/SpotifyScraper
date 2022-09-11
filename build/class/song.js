@@ -1,28 +1,30 @@
-const ALBUM_SELECTOR = 'a:not([class])';
-const ATTRIBUTE_SELECTOR = 'a[class]';
+const ARTISTS_SELECTOR = 'a:not([class])';
+const ATTRIBUTE_SELECTOR = 'a';
 export class Song {
     constructor(songRowElement) {
-        this.title = this.extractTitleFromElement(songRowElement);
-        this.artists = this.extractArtistsFromElement(songRowElement);
-        this.album = this.extractAlbumFromElement(songRowElement);
+        this.songRowElement = songRowElement;
     }
-    extractArtistsFromElement(songRowElement) {
-        const artistsElements = Array.from(songRowElement.querySelectorAll(ALBUM_SELECTOR));
-        const artistsText = artistsElements.map((artist) => artist.textContent);
-        return artistsText;
+    async getArtists(songRowElement) {
+        const artistElements = await songRowElement.$$eval(ARTISTS_SELECTOR, artists => artists.map((artist) => artist.text));
+        return artistElements;
     }
-    extractTitleFromElement(songRowElement) {
-        const songAttributes = Array.from(songRowElement.querySelectorAll(ATTRIBUTE_SELECTOR));
-        const title = songAttributes.first;
-        return title.text;
+    async getTitle(songRowElement) {
+        const songAttributes = await songRowElement.$$eval(ATTRIBUTE_SELECTOR, attributes => attributes.map((attribute) => attribute.text));
+        const title = songAttributes[0];
+        return title;
     }
-    extractAlbumFromElement(songRowElement) {
-        const songAttributes = Array.from(songRowElement.querySelectorAll(ATTRIBUTE_SELECTOR));
-        const album = songAttributes.last;
-        return songAttributes.length > 1 ? album.text : undefined;
+    async getAlbum(songRowElement) {
+        const songAttributes = await songRowElement.$$eval(ATTRIBUTE_SELECTOR, attributes => attributes.map((attribute) => attribute.text));
+        const album = songAttributes[songAttributes.length - 1];
+        return songAttributes.length > 1 ? album : undefined;
     }
     equals(otherSong) {
         return this.title === otherSong.title && this.artists === otherSong.artists;
+    }
+    async load() {
+        this.title = await this.getTitle(this.songRowElement);
+        this.artists = await this.getArtists(this.songRowElement);
+        this.album = await this.getAlbum(this.songRowElement);
     }
     toJSON() {
         return {

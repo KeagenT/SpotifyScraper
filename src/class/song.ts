@@ -1,7 +1,7 @@
 import { ElementHandle } from 'puppeteer';
 
 const ARTISTS_SELECTOR = 'a:not([class])';
-const ATTRIBUTE_SELECTOR = 'a[class]';
+const ATTRIBUTE_SELECTOR = 'a';
 
 export class Song {
     songRowElement: ElementHandle;
@@ -20,13 +20,13 @@ export class Song {
 
     async getTitle (songRowElement: ElementHandle<Element>): Promise<string> {
         const songAttributes: string[] = await songRowElement.$$eval(ATTRIBUTE_SELECTOR, attributes => attributes.map((attribute: any) => attribute.text));
-        const title: string = songAttributes.first;
+        const title: string = songAttributes[0];
         return title;
     }
 
     async getAlbum (songRowElement: ElementHandle<Element>): Promise<string | undefined> {
         const songAttributes: string[] = await songRowElement.$$eval(ATTRIBUTE_SELECTOR, attributes => attributes.map((attribute: any) => attribute.text));
-        const album: any = songAttributes.last;
+        const album: any = songAttributes[songAttributes.length - 1];
         return songAttributes.length > 1 ? album : undefined;
     }
 
