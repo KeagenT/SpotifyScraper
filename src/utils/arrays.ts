@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 /* eslint-disable no-extend-native */
-export {};
-
 declare global {
     interface Array<T> {
         first: T
@@ -20,3 +18,4 @@ if (!Array.prototype.first) {
         return this[0];
     };
 }
+export {};

@@ -1,11 +1,11 @@
-import puppeteer, { Page } from 'puppeteer';
-import { Song } from './class/song';
-import 'utils/arrays.ts';
+import puppeteer, { ElementHandle, Page } from 'puppeteer';
+import { Song } from './class/song.js';
+import {} from 'utils/arrays.js';
 
-const scrapingURL = 'https://open.spotify.com/playlist/5xlPVTUAFxxneWX9AuurrY?si=94538a99b1b0429e';
+const scrapingURL = 'https://open.spotify.com/playlist/7wXtRYW8fjEqV4gGdhnuQE?si=cfbe46dafa3442e3&nd=1';
 const TRACKLIST_ROW_SELECTOR = 'div[data-testid="tracklist-row"]';
 
-const getSpotifyPlaylistPageHTML = async (url: string = scrapingURL): Promise<string> => {
+const getSpotifyPlaylistPageSongArray = async (url: string = scrapingURL): Promise<any> => {
     const browser = await puppeteer.launch({
         headless: false
     });
@@ -17,46 +17,53 @@ const getSpotifyPlaylistPageHTML = async (url: string = scrapingURL): Promise<st
     });
     let initialSelectorItems = 0;
     let loadedSelectorItems = 0;
+    const scrapedSongs: Song[] = [];
+    let count = 0;
     do {
         await page.waitForSelector(TRACKLIST_ROW_SELECTOR);
         await page.waitForNetworkIdle();
         initialSelectorItems = await getCount(page, TRACKLIST_ROW_SELECTOR);
+        const pendingSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
+        const parsedSongs = parseAllLoadedSongRowHTML(pendingSongsHTML);
+        await pushOnlyNewSongs(scrapedSongs, parsedSongs);
         await scrollDownToLast(page, TRACKLIST_ROW_SELECTOR);
+        await page.waitForNetworkIdle();
         loadedSelectorItems = await getCount(page, TRACKLIST_ROW_SELECTOR);
-    } while (loadedSelectorItems > initialSelectorItems);
-
-    const loadedHTML = await page.content();
+        count += 1;
+    } while (loadedSelectorItems > initialSelectorItems && count < 6);
 
     await browser.close();
-    return loadedHTML;
+    return scrapedSongs;
 };
 
-async function getAllLoadedSongRowHTML (page: Page, selector = TRACKLIST_ROW_SELECTOR): Promise<Element[]> {
-    const loadedSongs = page.$$eval(selector, songsHTMLArray => songsHTMLArray);
-    return await loadedSongs;
+async function getAllLoadedSongRowHTML (page: Page, selector = TRACKLIST_ROW_SELECTOR): Promise<Array<ElementHandle<Element>>> {
+    return await page.$$(selector);
 }
 
-function songInScraped (scrapedSongs: Song[], song: Song): boolean {
+async function songInScraped (scrapedSongs: Song[], pendingSong: Song): Promise<boolean> {
     let songFound = false;
-    scrapedSongs.forEach((scrapedSong) => {
-        if (scrapedSong.equals(song)) {
+    for (const scrapedSong of scrapedSongs) {
+        await scrapedSong.load();
+        await pendingSong.load();
+        if (scrapedSong.equals(pendingSong)) {
             songFound = true;
             return songFound;
         }
-    });
+    }
     return songFound;
 }
 
-function parseAllLoadedSongRowHTML (songsRowHTML: Element[]): Song[] {
+function parseAllLoadedSongRowHTML (songsRowHTML: Array<ElementHandle<Element>>): Song[] {
     return songsRowHTML.map((songRowHTML) => new Song(songRowHTML));
 }
 
-function pushOnlyNewSongs (OldSongs: Song[], CurrentlyloadedSongs: Song[]): void {
-    CurrentlyloadedSongs.forEach((song) => {
-        if (!songInScraped(OldSongs, song)) {
-            OldSongs.push(song);
+async function pushOnlyNewSongs (scrapedSongs: Song[], pendingSongs: Song[]): Promise<void> {
+    for (const pendingSong of pendingSongs) {
+        const songFound = await songInScraped(scrapedSongs, pendingSong);
+        if (!songFound) {
+            scrapedSongs.push(pendingSong);
         }
-    });
+    }
 }
 
 async function getCount (page: Page, selector: string): Promise<any> {
@@ -68,3 +75,6 @@ async function scrollDownToLast (page: Page, selector: string): Promise<any> {
         e[e.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'end' });
     });
 }
+
+const scrapedSongs = await getSpotifyPlaylistPageSongArray();
+console.log(scrapedSongs);

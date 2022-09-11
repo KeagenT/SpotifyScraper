@@ -1,37 +1,43 @@
-const ALBUM_SELECTOR = 'a:not([class])';
+import { ElementHandle } from 'puppeteer';
+
+const ARTISTS_SELECTOR = 'a:not([class])';
 const ATTRIBUTE_SELECTOR = 'a[class]';
 
 export class Song {
+    songRowElement: ElementHandle;
     title: string;
-    artists: string [];
+    artists: string[];
     album: string | undefined;
 
-    constructor (songRowElement: Element) {
-        this.title = this.extractTitleFromElement(songRowElement);
-        this.artists = this.extractArtistsFromElement(songRowElement);
-        this.album = this.extractAlbumFromElement(songRowElement);
+    constructor (songRowElement: ElementHandle<Element>) {
+        this.songRowElement = songRowElement;
     }
 
-    extractArtistsFromElement (songRowElement: Element): string[] {
-        const artistsElements: Element[] = Array.from(songRowElement.querySelectorAll(ALBUM_SELECTOR));
-        const artistsText: string[] = artistsElements.map((artist: any) => artist.textContent);
-        return artistsText;
+    async getArtists (songRowElement: ElementHandle<Element>): Promise<string[]> {
+        const artistElements: string[] = await songRowElement.$$eval(ARTISTS_SELECTOR, artists => artists.map((artist: any) => artist.text));
+        return artistElements;
     }
 
-    extractTitleFromElement (songRowElement: Element): string {
-        const songAttributes: Element[] = Array.from(songRowElement.querySelectorAll(ATTRIBUTE_SELECTOR));
-        const title: any = songAttributes.first;
-        return title.text;
+    async getTitle (songRowElement: ElementHandle<Element>): Promise<string> {
+        const songAttributes: string[] = await songRowElement.$$eval(ATTRIBUTE_SELECTOR, attributes => attributes.map((attribute: any) => attribute.text));
+        const title: string = songAttributes.first;
+        return title;
     }
 
-    extractAlbumFromElement (songRowElement: Element): string | undefined {
-        const songAttributes: Element[] = Array.from(songRowElement.querySelectorAll(ATTRIBUTE_SELECTOR));
+    async getAlbum (songRowElement: ElementHandle<Element>): Promise<string | undefined> {
+        const songAttributes: string[] = await songRowElement.$$eval(ATTRIBUTE_SELECTOR, attributes => attributes.map((attribute: any) => attribute.text));
         const album: any = songAttributes.last;
-        return songAttributes.length > 1 ? album.text : undefined;
+        return songAttributes.length > 1 ? album : undefined;
     }
 
     equals (otherSong: Song): boolean {
         return this.title === otherSong.title && this.artists === otherSong.artists;
+    }
+
+    async load (): Promise<void> {
+        this.title = await this.getTitle(this.songRowElement);
+        this.artists = await this.getArtists(this.songRowElement);
+        this.album = await this.getAlbum(this.songRowElement);
     }
 
     toJSON (): object {

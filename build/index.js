@@ -1,8 +1,8 @@
 import puppeteer from 'puppeteer';
-import { load } from 'cheerio';
-const scrapingURL = 'https://open.spotify.com/playlist/5xlPVTUAFxxneWX9AuurrY?si=94538a99b1b0429e';
+import { Song } from './class/song.js';
+const scrapingURL = 'https://open.spotify.com/playlist/7wXtRYW8fjEqV4gGdhnuQE?si=cfbe46dafa3442e3&nd=1';
 const TRACKLIST_ROW_SELECTOR = 'div[data-testid="tracklist-row"]';
-const getSpotifyPlaylistPageHTML = async (url) => {
+const getSpotifyPlaylistPageSongArray = async (url = scrapingURL) => {
     const browser = await puppeteer.launch({
         headless: false
     });
@@ -12,25 +12,49 @@ const getSpotifyPlaylistPageHTML = async (url) => {
         width: 1920,
         height: 1080
     });
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    page.on('dialog', async (dialog) => {
-        await dialog.dismiss();
-    });
     let initialSelectorItems = 0;
     let loadedSelectorItems = 0;
-    const delay = 2000;
+    const scrapedSongs = [];
+    let loadedSongsHTML;
+    let count = 0;
     do {
         await page.waitForSelector(TRACKLIST_ROW_SELECTOR);
-        await page.waitForTimeout(delay);
+        await page.waitForNetworkIdle();
         initialSelectorItems = await getCount(page, TRACKLIST_ROW_SELECTOR);
+        loadedSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
+        //const parsedSongs = parseAllLoadedSongRowHTML(await loadedSongsHTML);
+        //pushOnlyNewSongs(scrapedSongs, parsedSongs);
         await scrollDownToLast(page, TRACKLIST_ROW_SELECTOR);
-        await page.waitForTimeout(delay);
+        await page.waitForNetworkIdle();
         loadedSelectorItems = await getCount(page, TRACKLIST_ROW_SELECTOR);
-    } while (loadedSelectorItems > initialSelectorItems);
-    const loadedHTML = await page.content();
+        count += 1;
+    } while (loadedSelectorItems > initialSelectorItems && count < 6);
     await browser.close();
-    return loadedHTML;
+    return loadedSongsHTML;
 };
+async function getAllLoadedSongRowHTML(page, selector = TRACKLIST_ROW_SELECTOR) {
+    return await page.$$(selector);
+}
+function songInScraped(scrapedSongs, song) {
+    let songFound = false;
+    scrapedSongs.forEach((scrapedSong) => {
+        if (scrapedSong.equals(song)) {
+            songFound = true;
+            return songFound;
+        }
+    });
+    return songFound;
+}
+function parseAllLoadedSongRowHTML(songsRowHTML) {
+    return songsRowHTML.map((songRowHTML) => new Song(songRowHTML));
+}
+function pushOnlyNewSongs(OldSongs, CurrentlyloadedSongs) {
+    CurrentlyloadedSongs.forEach((song) => {
+        if (!songInScraped(OldSongs, song)) {
+            OldSongs.push(song);
+        }
+    });
+}
 async function getCount(page, selector) {
     return await page.$$eval(selector, a => a.length);
 }
@@ -39,27 +63,5 @@ async function scrollDownToLast(page, selector) {
         e[e.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'end' });
     });
 }
-const pageHTML = await getSpotifyPlaylistPageHTML(scrapingURL);
-// const fileLoadedHTML = fs.readFileSync('src/songs.html', 'utf-8')
-const songArrayExtractor = async (pageHTML) => {
-    const NAME = 0;
-    const ARTIST = 1;
-    const ALBUM = 2;
-    const songs = [];
-    const $ = await load(pageHTML);
-    $(TRACKLIST_ROW_SELECTOR).each((index, trackRowElement) => {
-        const songAttributes = [];
-        $(trackRowElement).find('a').each((i, el) => {
-            songAttributes.push($(el).text());
-        });
-        songs.push({
-            name: songAttributes[NAME],
-            artist: songAttributes[ARTIST],
-            album: songAttributes[ALBUM]
-        });
-    });
-    return songs;
-};
-const songsArray = await songArrayExtractor(pageHTML);
-console.log(songsArray);
-console.log(songsArray.length);
+const scrapedSongs = await getSpotifyPlaylistPageSongArray();
+console.log(scrapedSongs);

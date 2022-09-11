@@ -12,6 +12,8 @@
         "project": ["tsconfig.json"]
     },
     "rules": {
+        "semi": [2, "always"],
+        "indent": ["error", 4],
         "@typescript-eslint/semi": [2, "always"],
         "@typescript-eslint/indent": ["error", 4]
     }
