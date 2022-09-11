@@ -1,7 +1,7 @@
 import puppeteer, { Page } from 'puppeteer';
 import { SongParser } from './utils/songParser.js';
 
-const scrapingURL = 'https://open.spotify.com/playlist/1BOI6DneLvsjuuBvv81bAF?si=c1afb50010ac4eca&nd=1';
+const scrapingURL = 'https://open.spotify.com/playlist/7wXtRYW8fjEqV4gGdhnuQE?si=9c3f62aa06b049df';
 const TRACKLIST_ROW_SELECTOR = 'div[data-testid="tracklist-row"]';
 
 const getSpotifyPlaylistPageSongArray = async (url: string = scrapingURL): Promise<any> => {
@@ -17,18 +17,18 @@ const getSpotifyPlaylistPageSongArray = async (url: string = scrapingURL): Promi
     let initialSelectorItems = 0;
     let loadedSelectorItems = 0;
     let scrapedSongsHTML: string[] = [];
-    let count = 0;
     do {
         await page.waitForSelector(TRACKLIST_ROW_SELECTOR);
         await page.waitForNetworkIdle();
         initialSelectorItems = await getCount(page, TRACKLIST_ROW_SELECTOR);
-        const pendingSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
+        let pendingSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
         scrapedSongsHTML = [...scrapedSongsHTML, ...pendingSongsHTML];
         await scrollDownToLast(page, TRACKLIST_ROW_SELECTOR);
         await page.waitForNetworkIdle();
         loadedSelectorItems = await getCount(page, TRACKLIST_ROW_SELECTOR);
-        count += 1;
-    } while (loadedSelectorItems > initialSelectorItems && count < 6);
+        pendingSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
+        scrapedSongsHTML = [...scrapedSongsHTML, ...pendingSongsHTML];
+    } while (loadedSelectorItems > initialSelectorItems);
 
     await browser.close();
     return scrapedSongsHTML;
