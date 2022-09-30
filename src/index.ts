@@ -1,9 +1,14 @@
 import puppeteer, { Page } from 'puppeteer';
 import { SongParser } from './utils/songParser.js';
+import fs from 'fs';
+import {spawn} from 'child_process';
 
-const scrapingURL = 'https://open.spotify.com/playlist/7wXtRYW8fjEqV4gGdhnuQE?si=9c3f62aa06b049df';
+const gymabelle = 'https://open.spotify.com/playlist/65PV8krerMrd0ypJTLRy6P?si=c8f4ad71af284a3c'
+const Salaryman = 'https://open.spotify.com/playlist/3Tyevvw4MrIcgLhHp9UD5G?si=655f2d871b25443a';
+const Cyberpunk = 'https://open.spotify.com/playlist/1SDeudnS5JLaxo7BB7p15g?si=c2dd54c1b0384858';
+const scrapingURL = Cyberpunk;
 const TRACKLIST_ROW_SELECTOR = 'div[data-testid="tracklist-row"]';
-const NUMBERED_ROW_SELECTOR = 'div[style="transform: translateY(0px);"] div[aria-rowindex]';
+const NUMBERED_ROW_SELECTOR = 'div[aria-rowindex]';
 
 const getSpotifyPlaylistPageSongArray = async (url: string = scrapingURL): Promise<any> => {
     const browser = await puppeteer.launch({
@@ -18,17 +23,18 @@ const getSpotifyPlaylistPageSongArray = async (url: string = scrapingURL): Promi
     let firstLoadedRowNumber;
     let rowNumberAfterScroll;
     let scrapedSongsHTML: string[] = [];
+    let pendingSongsHTML;
     do {
         await page.waitForSelector(TRACKLIST_ROW_SELECTOR);
         await page.waitForNetworkIdle();
         firstLoadedRowNumber = await getFirstSongNumber(page);
-        let pendingSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
-        scrapedSongsHTML = [...scrapedSongsHTML, ...pendingSongsHTML];
-        await scrollDownToLast(page, TRACKLIST_ROW_SELECTOR);
+        pendingSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
+        pendingSongsHTML.forEach(song => {
+            scrapedSongsHTML.push(song);
+        });
+        await scrollDownToLast(page, NUMBERED_ROW_SELECTOR);
         await page.waitForNetworkIdle();
         rowNumberAfterScroll = await getFirstSongNumber(page);
-        pendingSongsHTML = await getAllLoadedSongRowHTML(page, TRACKLIST_ROW_SELECTOR);
-        scrapedSongsHTML = [...scrapedSongsHTML, ...pendingSongsHTML];
     } while (firstLoadedRowNumber !== rowNumberAfterScroll);
 
     await browser.close();
@@ -36,6 +42,7 @@ const getSpotifyPlaylistPageSongArray = async (url: string = scrapingURL): Promi
 };
 
 async function getAllLoadedSongRowHTML (page: Page, selector = TRACKLIST_ROW_SELECTOR): Promise<string[]> {
+    page.waitForSelector(selector);
     return await page.$$eval(selector, songs => songs.map(song => song.outerHTML));
 }
 
@@ -44,7 +51,8 @@ async function getCount (page: Page, selector: string): Promise<any> {
 }
 
 async function getFirstSongNumber (page: Page, selector = NUMBERED_ROW_SELECTOR): Promise<any> {
-    return await page.$eval(selector, div => div.getAttribute('aria-rowindex'));
+    await page.waitForSelector(selector);
+    return await page.$$eval(selector, div => div[div.length - 1].getAttribute('aria-rowindex'));
 }
 
 async function scrollDownToLast (page: Page, selector: string): Promise<any> {
@@ -53,15 +61,33 @@ async function scrollDownToLast (page: Page, selector: string): Promise<any> {
     });
 }
 
-function onlyUnique (self: any[]): any[] {
-    const keys = self.map(item => item.key);
-    const uniqueKeys = [...new Set(keys)];
-    return self.filter((el, i) => uniqueKeys.indexOf(el.key) === i);
+function onlyUnique (array: any[]): any[] {
+    return [...new Map(array.map(item => [item.key, item])).values()];
 }
 
+
 const scrapedSongs = await getSpotifyPlaylistPageSongArray();
-const parsedSongs = scrapedSongs.map(scrapedSong => SongParser.toJSON(scrapedSong));
-let uniqueSongs = onlyUnique(parsedSongs);
-uniqueSongs = uniqueSongs.map(({ key, ...songs }) => songs);
-console.log(uniqueSongs);
-console.log(uniqueSongs.length);
+let parsedSongs = scrapedSongs.map(scrapedSong => SongParser.toJSON(scrapedSong));
+parsedSongs = onlyUnique(parsedSongs);
+const JSONParsed = JSON.stringify(parsedSongs, null, 4);
+console.log(parsedSongs)
+fs.writeFile("./src/scrapedSongs.json", JSONParsed, 'utf8', function (err) {
+    if (err) {
+        return console.log(err);
+    }
+
+    console.log("The file was saved!");
+});
+function pbcopy(data) {
+    var proc = spawn('pbcopy'); 
+    proc.stdin.write(data); proc.stdin.end();
+}
+pbcopy(JSONParsed);
+
+/*
+const rawData = fs.readFileSync('src/scrapedSongs.json', 'utf8');
+const JSONFromFile = JSON.parse(rawData);
+const uniqueParsed = onlyUnique(JSONFromFile).map(({key, ...songs}) => songs);
+console.log(uniqueParsed);
+console.log(uniqueParsed.length);
+*/

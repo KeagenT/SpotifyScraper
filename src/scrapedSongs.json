@@ -1,0 +1,129 @@
+[
+    {
+        "title": "MONEY",
+        "artists": [
+            "LISA"
+        ],
+        "album": "LALISA",
+        "key": "MONEYLALISALISA"
+    },
+    {
+        "title": "City on Lockdown",
+        "artists": [
+            "Yellow Claw",
+            "Juicy J",
+            "Lil Debbie"
+        ],
+        "album": "Los Amsterdam",
+        "key": "City on LockdownLos AmsterdamYellow ClawJuicy JLil Debbie"
+    },
+    {
+        "title": "No Role Modelz",
+        "artists": [
+            "J. Cole"
+        ],
+        "album": "2014 Forest Hills Drive",
+        "key": "No Role Modelz2014 Forest Hills DriveJ. Cole"
+    },
+    {
+        "title": "Stronger",
+        "artists": [
+            "Kanye West"
+        ],
+        "album": "Graduation",
+        "key": "StrongerGraduationKanye West"
+    },
+    {
+        "title": "Return of the Mack",
+        "artists": [
+            "Mark Morrison"
+        ],
+        "album": "Return of the Mack",
+        "key": "Return of the MackReturn of the MackMark Morrison"
+    },
+    {
+        "title": "m.A.A.d city",
+        "artists": [
+            "Kendrick Lamar",
+            "MC Eiht"
+        ],
+        "album": "good kid, m.A.A.d city (Deluxe)",
+        "key": "m.A.A.d citygood kid, m.A.A.d city (Deluxe)Kendrick LamarMC Eiht"
+    },
+    {
+        "title": "Aute Cuture",
+        "artists": [
+            "ROSALÍA"
+        ],
+        "album": "Aute Cuture",
+        "key": "Aute CutureAute CutureROSALÍA"
+    },
+    {
+        "title": "Wow.",
+        "artists": [
+            "Post Malone"
+        ],
+        "album": "Hollywood's Bleeding",
+        "key": "Wow.Hollywood's BleedingPost Malone"
+    },
+    {
+        "title": "Big Shot (with Travis Scott)",
+        "artists": [
+            "Kendrick Lamar",
+            "Travis Scott"
+        ],
+        "album": "Black Panther The Album Music From And Inspired By",
+        "key": "Big Shot (with Travis Scott)Black Panther The Album Music From And Inspired ByKendrick LamarTravis Scott"
+    },
+    {
+        "title": "Bounce Back",
+        "artists": [
+            "Big Sean"
+        ],
+        "album": "I Decided.",
+        "key": "Bounce BackI Decided.Big Sean"
+    },
+    {
+        "title": "Can't Get Enough",
+        "artists": [
+            "J. Cole",
+            "Trey Songz"
+        ],
+        "album": "Cole World: The Sideline Story",
+        "key": "Can't Get EnoughCole World: The Sideline StoryJ. ColeTrey Songz"
+    },
+    {
+        "title": "Backseat Freestyle",
+        "artists": [
+            "Kendrick Lamar"
+        ],
+        "album": "good kid, m.A.A.d city (Deluxe)",
+        "key": "Backseat Freestylegood kid, m.A.A.d city (Deluxe)Kendrick Lamar"
+    },
+    {
+        "title": "Ni**as In Paris",
+        "artists": [
+            "JAY-Z",
+            "Kanye West"
+        ],
+        "album": "Watch The Throne (Deluxe)",
+        "key": "Ni**as In ParisWatch The Throne (Deluxe)JAY-ZKanye West"
+    },
+    {
+        "title": "Turn Down for What",
+        "artists": [
+            "DJ Snake",
+            "Lil Jon"
+        ],
+        "album": "Turn Down for What",
+        "key": "Turn Down for WhatTurn Down for WhatDJ SnakeLil Jon"
+    },
+    {
+        "title": "Electric Zoo",
+        "artists": [
+            "Spongebob Squarepants"
+        ],
+        "album": "Spongebob Squarepants - The Yellow Album",
+        "key": "Electric ZooSpongebob Squarepants - The Yellow AlbumSpongebob Squarepants"
+    }
+]
